@@ -2,9 +2,8 @@ NAME = $(shell jq -r .name config.json)
 VER  = $(shell jq -r .version config.json)
 
 TESTS = $(wildcard test/*.txt)
-TEST_RESULTS = $(patsubst test/%.txt,build/test/%.out,$(TESTS))
 
-.PHONY: all clean check
+.PHONY: all clean check $(TESTS)
 
 all: build/$(NAME)
 
@@ -15,9 +14,8 @@ build/$(NAME): src/wordcount.c config.json
 clean:
 	rm -rf build
 
-check: $(TEST_RESULTS)
+check: $(TESTS)
+	@:
 
-build/test/%.out: test/%.txt test/%.expected build/$(NAME)
-	mkdir -p build/test
-	./build/$(NAME) < $< > $@
-	diff -u test/$*.expected $@
+$(TESTS): build/$(NAME)
+	@./build/$(NAME) < $@ | diff - $(@:.txt=.expected)
